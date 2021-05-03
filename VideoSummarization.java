@@ -46,7 +46,7 @@ public class VideoSummarization {
 
 	vs.PlayInSync(args[0], args[1]);
 	
-	//vs.BreakInShots(args[1]);
+	vs.BreakInShots(args[1]);
 
 	}
 
