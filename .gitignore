@@ -6,7 +6,12 @@
 
 # BlueJ files
 *.ctxt
+*.txt
 
+*.rgb
+*.jpg
+data/
+.vscode/
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
