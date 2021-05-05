@@ -12,6 +12,7 @@ public class VideoProcessor {
     final int width = 320;
     final int height = 180;
     final int fps = 30;
+    final int totalFrame = 2700;
     private final int threshold = 25;
     private int sec_buffer = 1;
 
@@ -21,10 +22,10 @@ public class VideoProcessor {
     ArrayList<byte[]> soundBlock;
     ArrayList<BufferedImage> FramesArray = new ArrayList<>();
 
-    public VideoProcessor(String pathToWav, String pathToFrames) {
-        // FileInputStream wavInput = getWavInput(pathToWav);
-        // PlaySound ps = new PlaySound(wavInput, 0, 16200);
-        // this.soundBlock = ps.getSoundArray();
+    public VideoProcessor(String pathToWav, String pathToFrames) throws IOException {
+        FileInputStream wavInput = getWavInput(pathToWav);
+        PlaySound ps = new PlaySound(wavInput, 0, 16200);
+        this.soundBlock = ps.getSoundArray();
         // this.FramesArray = new ArrayList<>();
         // BreakInShots(pathToFrames);
         // for (int i = 1; i < 30 * 60 * 9; i++) {
@@ -35,13 +36,63 @@ public class VideoProcessor {
             outputFrameInfo(pathToFrames);
         }
         catch (Exception e) {}
-        int total = 0;
-        for (LogicalShot shot : shotList) {
-            System.out.println(shot.getDuraion());
-            total += shot.getDuraion();
-        }
-        System.out.println("total: " + total);
+        // int total = 0;
+        // for (LogicalShot shot : shotList) {
+        //     System.out.println(shot.getDuraion());
+        //     total += shot.getDuraion();
+        // }
+        // System.out.println("total: " + total);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("Summary.txt"));
+        ArrayList<byte[]> soundList = new ArrayList<>();
+        ArrayList<Integer> frameList = outputFrameSummary(shotList);
+        for (int i: frameList)
+            soundList.add(soundBlock.get(i));
+        int j = 0;
+        for (int i: frameList)
+            writer.write((j++) + ": " + i + "\n");
+        writer.close();
+    }
 
+    private ArrayList<Integer> outputFrameSummary(ArrayList<LogicalShot> shotList) {
+        ArrayList<Integer> res = new ArrayList<>();
+        int remainingFrames = totalFrame;
+        Collections.sort(shotList, new Comparator<LogicalShot>() {
+            @Override
+            public int compare(LogicalShot s1, LogicalShot s2) {
+                if (s1.getScore() == s2.getScore())
+                    return 0;
+                else if (s1.getScore() > s2.getScore())
+                    return 1;
+                return -1;
+            }
+        });
+        for (LogicalShot shot: shotList) {
+            if (shot.getDuraion() < remainingFrames) {
+                shot.setFramesToKeep(shot.getDuraion());
+                remainingFrames -= shot.getDuraion();
+            }
+            else {
+                shot.setFramesToKeep(remainingFrames);
+                break;
+            }
+        }
+
+        Collections.sort(shotList, new Comparator<LogicalShot>() {
+            @Override
+            public int compare(LogicalShot s1, LogicalShot s2) {
+                if (s1.getShotId() == s2.getShotId())
+                    return 0;
+                else if (s1.getShotId() > s2.getShotId())
+                    return 1;
+                return -1;
+            }
+        });
+        for (LogicalShot shot: shotList) {
+            for (int i = 0; i < shot.getFramesToKeep(); i++) 
+                res.add(shot.getStartFrameId() + i);
+        }
+
+        return res;
     }
 
     private void outputFrameInfo(String pathToFrames) throws IOException {

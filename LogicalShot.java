@@ -5,8 +5,9 @@ public class LogicalShot {
     private int shotId;
     private int startFrameId;
     private int endFrameId;
-    private int score;
+    private double score;
     private int duration;
+    private int framesToKeep; 
     private ArrayList<Frame> frameList;
 
     public LogicalShot(int shotId, ArrayList<Frame> frameList) {
@@ -15,6 +16,7 @@ public class LogicalShot {
         this.startFrameId = frameList.get(0).getFrameId();
         this.endFrameId = frameList.get(frameList.size() - 1).getFrameId();
         this.duration = endFrameId - startFrameId;
+        this.framesToKeep = 0;
         this.score = calculateScore();
     }
 
@@ -26,12 +28,34 @@ public class LogicalShot {
         return this.shotId;
     }
 
-    public int getScore() {
+    public double getScore() {
         return this.score;
     }
 
-    private int calculateScore() {
-        int score = 0;
+    public int getStartFrameId() {
+        return this.startFrameId;
+    }
+
+    public int getFramesToKeep() {
+        return this.framesToKeep;
+    }
+
+    public void setFramesToKeep(int newVal) {
+        this.framesToKeep = newVal;
+    }
+
+    private double calculateScore() {
+        double totalVariance = 0;
+        double maxVariance = Integer.MIN_VALUE;
+        double totalBrightness = 0;
+        for (Frame frame: frameList) {
+            maxVariance = Math.max(maxVariance, frame.getColorVariance());
+            totalVariance += frame.getColorVariance();
+            totalBrightness += frame.getColorBrightnessPercent();
+        }
+        double varianceScore = totalVariance / (maxVariance * frameList.size());
+        double brightnessScore = totalBrightness / frameList.size();
+        double score = varianceScore * 0.3 + brightnessScore * 0.3;
         return score;
     }
 }
