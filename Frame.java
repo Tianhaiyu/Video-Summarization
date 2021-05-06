@@ -41,7 +41,7 @@ public class Frame {
                 totalAvgDiff += Math.max(Math.max(avgDiffR, avgDiffG), avgDiffB);
             }
         }
-        this.colorBrightnessPercent = numBrightBlock / (height * width / 16) * 100;
+        this.colorBrightnessPercent = numBrightBlock / (height * width / 16);
         this.colorVariance = totalAvgDiff / (height * width / 16);
     }
 
