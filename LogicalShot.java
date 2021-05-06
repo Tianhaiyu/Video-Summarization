@@ -9,6 +9,7 @@ public class LogicalShot {
     private int duration;
     private int framesToKeep; 
     private ArrayList<Frame> frameList;
+    private double audioScore = 0;
 
     public LogicalShot(int shotId, ArrayList<Frame> frameList) {
         this.frameList = frameList;
@@ -17,6 +18,18 @@ public class LogicalShot {
         this.endFrameId = frameList.get(frameList.size() - 1).getFrameId();
         this.duration = endFrameId - startFrameId;
         this.framesToKeep = 0;
+        //this.score = calculateScore();
+    }
+    
+    public void setAudioScore(double audioWeight) {
+        this.audioScore = audioWeight;
+    }
+    
+    public double getAudioScore() {
+        return this.audioScore;
+    }
+    
+    public void calculateTotalScore() {
         this.score = calculateScore();
     }
 
@@ -55,7 +68,7 @@ public class LogicalShot {
         }
         double varianceScore = totalVariance / (maxVariance * frameList.size());
         double brightnessScore = totalBrightness / frameList.size();
-        double score = varianceScore * 0.3 + brightnessScore * 0.3;
+        double score = varianceScore * 0.3 + brightnessScore * 0.3 + audioScore * 0.3;
         return score;
     }
 }

@@ -5,6 +5,8 @@ import java.math.*;
 import java.util.*;
 import java.util.Arrays;
 import java.util.Timer;
+
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
 public class VideoProcessor {
@@ -21,6 +23,8 @@ public class VideoProcessor {
 
     ArrayList<byte[]> soundBlock;
     ArrayList<BufferedImage> FramesArray = new ArrayList<>();
+    ArrayList<Double> audioWs = new ArrayList<>();
+    ArrayList<Integer> breaksIndex  = new ArrayList<>();
 
     public VideoProcessor(String pathToWav, String pathToFrames) throws IOException {
         FileInputStream wavInput = getWavInput(pathToWav);
@@ -32,16 +36,38 @@ public class VideoProcessor {
         // Frame temp = new Frame(pathToFrames, i);
         // }
         ArrayList<LogicalShot> shotList = BreakInShots(pathToFrames);
-        try {
-            outputFrameInfo(pathToFrames);
-        }
-        catch (Exception e) {}
         // int total = 0;
         // for (LogicalShot shot : shotList) {
         //     System.out.println(shot.getDuraion());
         //     total += shot.getDuraion();
         // }
         // System.out.println("total: " + total);
+        System.out.println("Audio analysis starting...");
+        AudioProcessor ap;
+        try {
+            ap = new AudioProcessor(pathToWav, breaksIndex);
+            audioWs = ap.getAudioWeights();
+            System.out.println("Audio weights size: " + audioWs.size());
+            //System.out.println(audioWs);
+        } catch (UnsupportedAudioFileException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (PlayWaveException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        //add audio weights to logical shot score
+        for(int i = 0; i < shotList.size(); i++) {
+            shotList.get(i).setAudioScore(audioWs.get(i));
+            shotList.get(i).calculateTotalScore();
+        }
+        
+        try {
+                outputFrameInfo(pathToFrames);
+            }
+        catch (Exception e) {}
+
         BufferedWriter writer = new BufferedWriter(new FileWriter("Summary.txt"));
         ArrayList<byte[]> soundList = new ArrayList<>();
         ArrayList<Integer> frameList = outputFrameSummary(shotList);
@@ -231,7 +257,7 @@ public class VideoProcessor {
                     boundary = i;
                     pastBreak = fps * sec_buffer;
                     System.out.println("finished processing shot " + shotId);
-                    ;
+                    breaksIndex.add(i);
                 }
                 CopyHistogramBack();
                 frameCounter = 0;
@@ -248,6 +274,7 @@ public class VideoProcessor {
                 frameList.add(new Frame(pathToFrames, j));
             }
             shotList.add(new LogicalShot(shotId, frameList));
+            breaksIndex.add(boundary);
             System.out.println("finished processing shot " + shotId);
             ;
         }
