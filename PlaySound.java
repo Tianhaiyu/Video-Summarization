@@ -125,7 +125,8 @@ public class PlaySound implements Runnable {
       @Override
       public void run() {
         try{
-          play(SoundArray.remove(0));
+          if(SoundArray.size() > 0)
+            play(SoundArray.remove(0));
         }catch(PlayWaveException e){
           e.printStackTrace();
         }
@@ -135,8 +136,8 @@ public class PlaySound implements Runnable {
       @Override
       public void run() {
         try{
-          
-          play(SoundArray.remove(0));
+          if(SoundArray.size() > 0)
+            play(SoundArray.remove(0));
 
         }catch(PlayWaveException e){
           e.printStackTrace();
@@ -147,7 +148,8 @@ public class PlaySound implements Runnable {
       @Override
       public void run() {
         try{
-          play(SoundArray.remove(0));
+          if(SoundArray.size() > 0)
+            play(SoundArray.remove(0));
         }catch(PlayWaveException e){
           e.printStackTrace();
         }

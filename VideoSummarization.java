@@ -256,27 +256,33 @@ public class VideoSummarization {
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if(FramesArray.size() > 0){
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime), 100);
 
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if(FramesArray.size() > 0){
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime + 333), 100);
 
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if(FramesArray.size() > 0){
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime + 666), 100);
 
@@ -305,27 +311,34 @@ public class VideoSummarization {
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if(FramesArray.size() > 0){
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
               }
             }, new Date(startTime), 100);
   
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if(FramesArray.size() > 0){
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
+
               }
             }, new Date(startTime + 333), 100);
   
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if(FramesArray.size() > 0){
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
               }
             }, new Date(startTime + 666), 100);
   
