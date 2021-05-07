@@ -6,6 +6,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine.Info;
+import javax.xml.transform.Source;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
@@ -20,27 +21,61 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 public class PlaySound implements Runnable {
 
   private InputStream waveStream;
-  private final int EXTERNAL_BUFFER_SIZE = 524288; // 128Kb
   private int frame;
   private int size;
   private ArrayList<byte[]> SoundArray;
   private AudioFormat audioFormat;
-  int startFrame;
-  int endFrame;
+  private Info info;
+  private SourceDataLine dataLine = null;
+  private FloatControl gainControl;
+  private Timer playTimer;
+  private long delay;
 
   /**
    * CONSTRUCTOR
    */
-  public PlaySound(InputStream waveStream, int startFrame, int endFrame) {
+  public PlaySound(InputStream waveStream) {
     this.waveStream = waveStream;
-    this.startFrame = startFrame;
-    this.endFrame = endFrame;
     try {
       createSoundArray();
     } catch (PlayWaveException e) {
       e.printStackTrace();
       return;
+    } finally{
+      try{        
+        initializeStream();
+        }catch(PlayWaveException e){
+          e.printStackTrace();
+        }
     }
+  }
+  public PlaySound(InputStream waveStream, ArrayList<byte[]> array) {
+      this.waveStream = waveStream;
+      this.SoundArray = array;
+      try{        
+      initializeStream();
+      }catch(PlayWaveException e){
+        e.printStackTrace();
+      }
+  }
+  public void initializeStream() throws PlayWaveException{
+    
+    this.info = new Info(SourceDataLine.class, audioFormat);
+
+    // opens the audio channel
+    try {
+      this.dataLine = (SourceDataLine) AudioSystem.getLine(this.info);
+      this.dataLine.open(this.audioFormat);
+    } catch (LineUnavailableException e1) {
+      throw new PlayWaveException(e1);
+    }
+
+    gainControl = (FloatControl) dataLine.getControl(
+      FloatControl.Type.MASTER_GAIN
+    );
+    gainControl.setValue(-20.0f);
+    // Starts the music :P
+    dataLine.start();
   }
 
   public int getFrame() { //get the number of audio frames PER VIDEO FRAME
@@ -54,20 +89,69 @@ public class PlaySound implements Runnable {
   public AudioFormat getAudioFormat() {
     return this.audioFormat;
   }
-
+  public void setDelay(long d){
+    this.delay = d;
+  }
   public ArrayList<byte[]> getSoundArray() {
     return this.SoundArray;
   }
-
-  public void run() {
-    try {
-      play(this.startFrame, this.endFrame);
-    } catch (PlayWaveException e) {
-      e.printStackTrace();
-      return;
-    }
+  public void stopTimer(){
+    dataLine.flush();
+    this.playTimer.cancel();
   }
+  public void run() {
+    startTimer();
+  }
+  public void startTimer(){
+    
+    playTimer = new Timer();
+    // try{
+    //   Thread.sleep(this.delay - System.currentTimeMillis());
+    // } catch(Exception e){
+    //   e.printStackTrace();
+    // }
+    // try{
+    //   for(int i = 0; i < 15; i++)
+    //     play(SoundArray.remove(0));
+    // }catch(PlayWaveException e){
+    //   e.printStackTrace();
+    // }
 
+    playTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        try{
+          play(SoundArray.remove(0));
+        }catch(PlayWaveException e){
+          e.printStackTrace();
+        }
+      }
+    }, new Date(this.delay), 100);
+    playTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        try{
+          
+          play(SoundArray.remove(0));
+
+        }catch(PlayWaveException e){
+          e.printStackTrace();
+        }
+      }
+    }, new Date(this.delay + 333), 100);
+    playTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        try{
+          play(SoundArray.remove(0));
+        }catch(PlayWaveException e){
+          e.printStackTrace();
+        }
+      }
+    }, new Date(this.delay + 666), 100);
+    
+
+  }
   public void createSoundArray() throws PlayWaveException {
     AudioInputStream audioInputStream = null;
     try {
@@ -107,30 +191,10 @@ public class PlaySound implements Runnable {
     }
   }
 
-  public void play(int startFrame, int endFrame) throws PlayWaveException {
-    Info info = new Info(SourceDataLine.class, audioFormat);
+  public void play(byte[]  soundClip) throws PlayWaveException {
 
-    // opens the audio channel
-    SourceDataLine dataLine = null;
-    try {
-      dataLine = (SourceDataLine) AudioSystem.getLine(info);
-      dataLine.open(this.audioFormat);
-    } catch (LineUnavailableException e1) {
-      throw new PlayWaveException(e1);
-    }
-
-    FloatControl gainControl = (FloatControl) dataLine.getControl(
-      FloatControl.Type.MASTER_GAIN
-    );
-    gainControl.setValue(-20.0f);
-    // Starts the music :P
-    dataLine.start();
-    for (int i = startFrame; i < endFrame; i++) {
-      dataLine.write(this.SoundArray.get(i), 0, this.frame * this.size);
-    }
+        dataLine.write(soundClip, 0, this.frame * this.size);  
 
     // plays what's left and and closes the audioChannel
-    dataLine.drain();
-    dataLine.close();
   }
 }

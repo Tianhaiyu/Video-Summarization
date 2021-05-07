@@ -28,7 +28,7 @@ public class VideoProcessor {
 
     public VideoProcessor(String pathToWav, String pathToFrames) throws IOException {
         FileInputStream wavInput = getWavInput(pathToWav);
-        PlaySound ps = new PlaySound(wavInput, 0, 16200);
+        PlaySound ps = new PlaySound(wavInput);
         this.soundBlock = ps.getSoundArray();
         // this.FramesArray = new ArrayList<>();
         // BreakInShots(pathToFrames);

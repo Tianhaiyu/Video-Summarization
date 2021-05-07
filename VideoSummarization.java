@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import java.math.*;
@@ -22,9 +23,18 @@ public class VideoSummarization {
   int width = 320;
   int height = 180;
   int fps = 30;
+  ArrayList<Integer> IntArray;
   ArrayList<BufferedImage> FramesArray;
+  ArrayList<byte[]> SoundArray;
   JFrame frame;
   JLabel label;
+  JButton playButton;
+  boolean firstPlay = true;
+  boolean isPaused = false;
+  BufferedImage BlackScreen;
+  Timer wavTimer;
+  Timer framesTimer;
+  int startIndex;
   // params use for break shots
   private int threshold = 25;
   private int sec_buffer = 1;
@@ -43,6 +53,7 @@ public class VideoSummarization {
       VideoProcessor vp = new VideoProcessor(args[0], args[1]);
     } else if (args[2].equals("-o")) {
       VideoSummarization vs = new VideoSummarization();
+
 
       vs.PlayInSync(args[0], args[1]);
     } else {
@@ -68,53 +79,108 @@ public class VideoSummarization {
     FileInputStream wavInput = getWavInput(pathToWav);
 
     // framesarray holds all frames
-    ArrayList<BufferedImage> FramesArray = new ArrayList<>();
+    if(IntArray == null){
 
-    for (int i = 0; i < (30 * 60 * 9); i++) {
-      // loads buffered images into array
-      BufferedImage OneFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-      if (i % 30 == 0)
-        System.out.println("Loading video: " + i / 30 + "/" + 60 * 9);
-      try {
-        int frameLength = width * height * 3;
-        String imgPath = pathToFrames + "frame" + i + ".rgb";
-        File file = new File(imgPath);
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
-        raf.seek(0);
+      FramesArray = new ArrayList<>();
+      System.out.println();
+      for (int i = 0; i < (30 * 60 * 9); i++) {
+        // loads buffered images into array
+        BufferedImage OneFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        if (i % 30 == 0)
+          System.out.println("Loading video: " + i / 30 + "/" + 60 * 9);
+        try {
+          int frameLength = width * height * 3;
+          String imgPath = pathToFrames + "frame" + i + ".rgb";
+          File file = new File(imgPath);
+          RandomAccessFile raf = new RandomAccessFile(file, "r");
+          raf.seek(0);
 
-        long len = frameLength;
-        byte[] bytes = new byte[(int) len];
+          long len = frameLength;
+          byte[] bytes = new byte[(int) len];
 
-        raf.read(bytes);
+          raf.read(bytes);
 
-        int ind = 0;
-        for (int y = 0; y < height; y++) {
-          for (int x = 0; x < width; x++) {
-            // byte a = 0;
-            byte r = bytes[ind];
-            byte g = bytes[ind + height * width];
-            byte b = bytes[ind + height * width * 2];
+          int ind = 0;
+          for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+              // byte a = 0;
+              byte r = bytes[ind];
+              byte g = bytes[ind + height * width];
+              byte b = bytes[ind + height * width * 2];
 
-            int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-            // int pix = ((a << 24) + (r << 16) + (g << 8) + b);
-            OneFrame.setRGB(x, y, pix);
-            ind++;
+              int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+              // int pix = ((a << 24) + (r << 16) + (g << 8) + b);
+              OneFrame.setRGB(x, y, pix);
+              ind++;
+            }
           }
-        }
-        raf.close();
+          raf.close();
 
-        FramesArray.add(OneFrame);
-      } catch (FileNotFoundException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
+          FramesArray.add(OneFrame);
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
+      System.out.println("Loading video: Complete!");
+    }
+    else{
+      FramesArray = new ArrayList<>();
+
+      for (int i = 0; i < IntArray.size(); i++) {
+        // loads buffered images into array
+        BufferedImage OneFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        if (i % 500 == 0)
+          System.out.println("Loading video Summary: ...");
+        try {
+          int frameLength = width * height * 3;
+          String imgPath = pathToFrames + "frame" + IntArray.get(i) + ".rgb";
+          File file = new File(imgPath);
+          RandomAccessFile raf = new RandomAccessFile(file, "r");
+          raf.seek(0);
+
+          long len = frameLength;
+          byte[] bytes = new byte[(int) len];
+
+          raf.read(bytes);
+
+          int ind = 0;
+          for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+              // byte a = 0;
+              byte r = bytes[ind];
+              byte g = bytes[ind + height * width];
+              byte b = bytes[ind + height * width * 2];
+
+              int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+              // int pix = ((a << 24) + (r << 16) + (g << 8) + b);
+              OneFrame.setRGB(x, y, pix);
+              ind++;
+            }
+          }
+          raf.close();
+
+          FramesArray.add(OneFrame);
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+      System.out.println("Loading video: Complete!");
     }
 
     // frame and label for displaying
     // TODO:add GUI for play pause
     frame = new JFrame();
     label = new JLabel();
+    frame.setTitle("Video Summarization");
+    playButton = new JButton(new String("Play"));
+    BlackScreen = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    BlackScreen = FramesArray.get(0);
+    ImageIcon icon = new ImageIcon(BlackScreen);
+    label.setIcon(icon);
 
     GridBagLayout gLayout = new GridBagLayout();
     frame.getContentPane().setLayout(gLayout);
@@ -127,61 +193,141 @@ public class VideoSummarization {
     c.gridy = 0;
 
     frame.getContentPane().add(label, c);
+    c.gridx = 0;
+    c.gridy = 1;
+    playButton.setBounds(100,100,100,40);
+    frame.getContentPane().add(playButton, c);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
-    Timer wavTimer = new Timer();
-    Timer framesTimer = new Timer();
+    frame.pack();
+    
+
+    wavTimer = new Timer();
+    framesTimer = new Timer();
 
     // small delay to make sure they start in sync
-    long startTime = System.currentTimeMillis() + 1000;
 
-    // START AND END FRAME
-    int startFrame = 0;
-    int endFrame = 16200;
+    startIndex = 0;
 
-    Thread wavThread = new Thread(new PlaySound(wavInput, startFrame, endFrame));
 
-    // initializes new thread to play sound
-    wavTimer.schedule(new TimerTask() {
+      PlaySound ps = new PlaySound(wavInput);
+    if(SoundArray == null){
+      SoundArray = ps.getSoundArray();
+    }
+
+    Thread wavThread = new Thread(ps);
+
+    //Thread vidThread = new Thread(new )
+    //add event listener for pause
+    playButton.addActionListener(new ActionListener(){
+
       @Override
-      public void run() {
-        try {
-          wavThread.start();
-        } catch (Exception e) {
-          e.printStackTrace();
-          return;
+      public void actionPerformed(ActionEvent e){
+        if (firstPlay == true){
+          firstPlay = false;
+          playButton.setText(new String("Pause"));
+          long startTime = System.currentTimeMillis() + 500;
+          ps.setDelay(startTime);
+          // initializes new thread to play sound
+          wavTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+              try {
+                  wavThread.start();
+
+              } catch (Exception e) {
+                e.printStackTrace();
+                return;
+              }
+            }
+          }, new Date(startTime));
+
+          // use 3 threads to play video with 333ms and 666ms offset
+          // kinda janky but other methods result in a desync of 1ms every 3 frames
+          // when setting delay time = 1000/30 due to rounding error
+
+          framesTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+              label.setIcon(icon);
+              frame.pack();
+            }
+          }, new Date(startTime), 100);
+
+          framesTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+              label.setIcon(icon);
+              frame.pack();
+            }
+          }, new Date(startTime + 333), 100);
+
+          framesTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+              label.setIcon(icon);
+              frame.pack();
+            }
+          }, new Date(startTime + 666), 100);
+
+        }
+
+        
+        else{
+          if(isPaused == false){
+            isPaused = true;
+            playButton.setText(new String("Play"));
+            try{
+              framesTimer.cancel();
+              ps.stopTimer();
+            }catch(Exception e1){
+              e1.printStackTrace();
+            }
+
+          }
+          else{
+            isPaused = false;
+            playButton.setText(new String("Pause"));
+            long startTime = System.currentTimeMillis() + 500;
+            ps.setDelay(startTime);
+            ps.startTimer();
+            framesTimer = new Timer();
+            framesTimer.scheduleAtFixedRate(new TimerTask() {
+              @Override
+              public void run() {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
+            }, new Date(startTime), 100);
+  
+            framesTimer.scheduleAtFixedRate(new TimerTask() {
+              @Override
+              public void run() {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
+            }, new Date(startTime + 333), 100);
+  
+            framesTimer.scheduleAtFixedRate(new TimerTask() {
+              @Override
+              public void run() {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
+            }, new Date(startTime + 666), 100);
+  
+
+          }
+          
         }
       }
-    }, new Date(startTime));
+    });
 
-    // use 3 threads to play video with 333ms and 666ms offset
-    // kinda janky but other methods result in a desync of 1ms every 3 frames
-    // when setting delay time = 1000/30 due to rounding error
-
-    framesTimer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-        label.setIcon(icon);
-        frame.pack();
-      }
-    }, new Date(startTime), 100);
-
-    framesTimer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-        label.setIcon(icon);
-        frame.pack();
-      }
-    }, new Date(startTime + 333), 100);
-
-    framesTimer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-        label.setIcon(icon);
-        frame.pack();
-      }
-    }, new Date(startTime + 666), 100);
   }
 }
