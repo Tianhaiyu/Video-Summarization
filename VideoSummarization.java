@@ -53,6 +53,7 @@ public class VideoSummarization {
       VideoProcessor vp = new VideoProcessor(args[0], args[1]);
       IntArray = vp.getFrameList();
       SoundArray = vp.getSoundList();
+      System.out.println(SoundArray.size());
       VideoSummarization vs = new VideoSummarization();
       vs.PlayInSync(args[0], args[1]);
     } else if (args[2].equals("-o")) {
@@ -217,6 +218,8 @@ public class VideoSummarization {
       PlaySound ps = new PlaySound(wavInput);
     if(SoundArray == null){
       SoundArray = ps.getSoundArray();
+    }else{
+      ps.setSoundArray(SoundArray);
     }
 
     Thread wavThread = new Thread(ps);

@@ -95,6 +95,10 @@ public class PlaySound implements Runnable {
   public ArrayList<byte[]> getSoundArray() {
     return this.SoundArray;
   }
+
+  public void setSoundArray(ArrayList<byte[]> array){
+    this.SoundArray = array;
+  }
   public void stopTimer(){
     dataLine.flush();
     this.playTimer.cancel();
