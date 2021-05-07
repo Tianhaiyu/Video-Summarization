@@ -23,9 +23,9 @@ public class VideoSummarization {
   int width = 320;
   int height = 180;
   int fps = 30;
-  ArrayList<Integer> IntArray;
+  static ArrayList<Integer> IntArray = new ArrayList<>();
   ArrayList<BufferedImage> FramesArray;
-  ArrayList<byte[]> SoundArray;
+  static ArrayList<byte[]> SoundArray;
   JFrame frame;
   JLabel label;
   JButton playButton;
@@ -51,6 +51,10 @@ public class VideoSummarization {
       return;
     } else if (args[2].equals("-p")) {
       VideoProcessor vp = new VideoProcessor(args[0], args[1]);
+      IntArray = vp.getFrameList();
+      SoundArray = vp.getSoundList();
+      VideoSummarization vs = new VideoSummarization();
+      vs.PlayInSync(args[0], args[1]);
     } else if (args[2].equals("-o")) {
       VideoSummarization vs = new VideoSummarization();
 

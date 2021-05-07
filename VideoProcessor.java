@@ -25,6 +25,17 @@ public class VideoProcessor {
     ArrayList<BufferedImage> FramesArray = new ArrayList<>();
     ArrayList<Double> audioWs = new ArrayList<>();
     ArrayList<Integer> breaksIndex  = new ArrayList<>();
+    
+    ArrayList<byte[]> soundList = new ArrayList<>();
+    ArrayList<Integer> frameList = new ArrayList<>();
+    
+    public ArrayList<byte[]> getSoundList(){
+    	return soundList;
+    }
+    
+    public ArrayList<Integer> getFrameList(){
+    	return frameList;
+    }
 
     public VideoProcessor(String pathToWav, String pathToFrames) throws IOException {
         FileInputStream wavInput = getWavInput(pathToWav);
@@ -69,8 +80,8 @@ public class VideoProcessor {
         catch (Exception e) {}
 
         BufferedWriter writer = new BufferedWriter(new FileWriter("Summary.txt"));
-        ArrayList<byte[]> soundList = new ArrayList<>();
-        ArrayList<Integer> frameList = outputFrameSummary(shotList);
+        //soundList = new ArrayList<>();
+        frameList = outputFrameSummary(shotList);
         for (int i: frameList)
             soundList.add(soundBlock.get(i));
         int j = 0;
@@ -79,7 +90,7 @@ public class VideoProcessor {
         writer.close();
     }
 
-    private ArrayList<Integer> outputFrameSummary(ArrayList<LogicalShot> shotList) {
+    public ArrayList<Integer> outputFrameSummary(ArrayList<LogicalShot> shotList) {
         ArrayList<Integer> res = new ArrayList<>();
         int remainingFrames = totalFrame;
         Collections.sort(shotList, new Comparator<LogicalShot>() {
