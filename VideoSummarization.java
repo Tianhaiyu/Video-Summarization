@@ -35,19 +35,12 @@ public class VideoSummarization {
   Timer wavTimer;
   Timer framesTimer;
   int startIndex;
-  // params use for break shots
-  private int threshold = 25;
-  private int sec_buffer = 1;
-
-  private int[][][] histogramPrev = new int[4][4][4];
-  private int[][][] histogramNext = new int[4][4][4];
-  ArrayList<Integer> shots = new ArrayList<Integer>();
 
   public static void main(String[] args) throws IOException {
     // Play the video
     if (args.length != 3) {
       System.err.println(
-          "usage: java VideoSummarization [path to wav] [path to folder containing frames] [-flag] \n flag: -p(process), -o(play)");
+          "usage: java VideoSummarization [path to wav] [path to folder containing frames] [-flag] \n flag: -p (play summary video), -o (play original video)");
       return;
     } else if (args[2].equals("-p")) {
       VideoProcessor vp = new VideoProcessor(args[0], args[1]);
@@ -57,13 +50,13 @@ public class VideoSummarization {
       VideoSummarization vs = new VideoSummarization();
       vs.PlayInSync(args[0], args[1]);
     } else if (args[2].equals("-o")) {
+      //TODO add function to play original video
       VideoSummarization vs = new VideoSummarization();
-
 
       vs.PlayInSync(args[0], args[1]);
     } else {
       System.err.println(
-          "usage: java VideoSummarization [path to wav] [path to folder containing frames] [-flag] \n flag: -p(process), -o(play)");
+          "usage: java VideoSummarization [path to wav] [path to folder containing frames] [-flag] \n flag: -p (play summary video), -o (play original video)");
       return;
     }
   }
@@ -72,7 +65,6 @@ public class VideoSummarization {
     FileInputStream wavInput = null;
     try {
       wavInput = new FileInputStream(pathToWav);
-      // inputStream = this.getClass().getResourceAsStream(filename);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
@@ -84,7 +76,7 @@ public class VideoSummarization {
     FileInputStream wavInput = getWavInput(pathToWav);
 
     // framesarray holds all frames
-    if(IntArray == null){
+    if (IntArray == null) {
 
       FramesArray = new ArrayList<>();
       System.out.println();
@@ -129,8 +121,7 @@ public class VideoSummarization {
         }
       }
       System.out.println("Loading video: Complete!");
-    }
-    else{
+    } else {
       FramesArray = new ArrayList<>();
 
       for (int i = 0; i < IntArray.size(); i++) {
@@ -177,7 +168,6 @@ public class VideoSummarization {
     }
 
     // frame and label for displaying
-    // TODO:add GUI for play pause
     frame = new JFrame();
     label = new JLabel();
     frame.setTitle("Video Summarization");
@@ -200,37 +190,31 @@ public class VideoSummarization {
     frame.getContentPane().add(label, c);
     c.gridx = 0;
     c.gridy = 1;
-    playButton.setBounds(100,100,100,40);
+    playButton.setBounds(100, 100, 100, 40);
     frame.getContentPane().add(playButton, c);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
     frame.pack();
-    
 
     wavTimer = new Timer();
     framesTimer = new Timer();
-
-    // small delay to make sure they start in sync
-
     startIndex = 0;
 
-
-      PlaySound ps = new PlaySound(wavInput);
-    if(SoundArray == null){
+    PlaySound ps = new PlaySound(wavInput);
+    if (SoundArray == null) {
       SoundArray = ps.getSoundArray();
-    }else{
+    } else {
       ps.setSoundArray(SoundArray);
     }
 
     Thread wavThread = new Thread(ps);
 
-    //Thread vidThread = new Thread(new )
-    //add event listener for pause
-    playButton.addActionListener(new ActionListener(){
+    // add event listener for pause
+    playButton.addActionListener(new ActionListener() {
 
       @Override
-      public void actionPerformed(ActionEvent e){
-        if (firstPlay == true){
+      public void actionPerformed(ActionEvent e) {
+        if (firstPlay == true) {
           firstPlay = false;
           playButton.setText(new String("Pause"));
           long startTime = System.currentTimeMillis() + 500;
@@ -240,7 +224,7 @@ public class VideoSummarization {
             @Override
             public void run() {
               try {
-                  wavThread.start();
+                wavThread.start();
 
               } catch (Exception e) {
                 e.printStackTrace();
@@ -256,46 +240,50 @@ public class VideoSummarization {
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if (FramesArray.size() > 0) {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime), 100);
 
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if (FramesArray.size() > 0) {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime + 333), 100);
 
           framesTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-              label.setIcon(icon);
-              frame.pack();
+              if (FramesArray.size() > 0) {
+                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                label.setIcon(icon);
+                frame.pack();
+              }
             }
           }, new Date(startTime + 666), 100);
 
         }
 
-        
-        else{
-          if(isPaused == false){
+        else {
+          if (isPaused == false) {
             isPaused = true;
             playButton.setText(new String("Play"));
-            try{
+            try {
               framesTimer.cancel();
               ps.stopTimer();
-            }catch(Exception e1){
+            } catch (Exception e1) {
               e1.printStackTrace();
             }
 
-          }
-          else{
+          } else {
             isPaused = false;
             playButton.setText(new String("Pause"));
             long startTime = System.currentTimeMillis() + 500;
@@ -305,33 +293,39 @@ public class VideoSummarization {
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if (FramesArray.size() > 0) {
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
               }
             }, new Date(startTime), 100);
-  
+
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if (FramesArray.size() > 0) {
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
+
               }
             }, new Date(startTime + 333), 100);
-  
+
             framesTimer.scheduleAtFixedRate(new TimerTask() {
               @Override
               public void run() {
-                ImageIcon icon = new ImageIcon(FramesArray.remove(0));
-                label.setIcon(icon);
-                frame.pack();
+                if (FramesArray.size() > 0) {
+                  ImageIcon icon = new ImageIcon(FramesArray.remove(0));
+                  label.setIcon(icon);
+                  frame.pack();
+                }
               }
             }, new Date(startTime + 666), 100);
-  
 
           }
-          
+
         }
       }
     });

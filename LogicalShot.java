@@ -18,7 +18,6 @@ public class LogicalShot {
         this.endFrameId = frameList.get(frameList.size() - 1).getFrameId();
         this.duration = endFrameId - startFrameId;
         this.framesToKeep = 0;
-        //this.score = calculateScore();
     }
     
     public void setAudioScore(double audioWeight) {

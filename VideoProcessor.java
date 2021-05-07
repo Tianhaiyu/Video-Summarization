@@ -22,7 +22,6 @@ public class VideoProcessor {
     private int[][][] histogramNext = new int[4][4][4];
 
     ArrayList<byte[]> soundBlock;
-    ArrayList<BufferedImage> FramesArray = new ArrayList<>();
     ArrayList<Double> audioWs = new ArrayList<>();
     ArrayList<Integer> breaksIndex  = new ArrayList<>();
     
@@ -41,30 +40,16 @@ public class VideoProcessor {
         FileInputStream wavInput = getWavInput(pathToWav);
         PlaySound ps = new PlaySound(wavInput);
         this.soundBlock = ps.getSoundArray();
-        // this.FramesArray = new ArrayList<>();
-        // BreakInShots(pathToFrames);
-        // for (int i = 1; i < 30 * 60 * 9; i++) {
-        // Frame temp = new Frame(pathToFrames, i);
-        // }
         ArrayList<LogicalShot> shotList = BreakInShots(pathToFrames);
-        // int total = 0;
-        // for (LogicalShot shot : shotList) {
-        //     System.out.println(shot.getDuraion());
-        //     total += shot.getDuraion();
-        // }
-        // System.out.println("total: " + total);
         System.out.println("Audio analysis starting...");
         AudioProcessor ap;
         try {
             ap = new AudioProcessor(pathToWav, breaksIndex);
             audioWs = ap.getAudioWeights();
             System.out.println("Audio weights size: " + audioWs.size());
-            //System.out.println(audioWs);
         } catch (UnsupportedAudioFileException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (PlayWaveException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         
@@ -142,100 +127,14 @@ public class VideoProcessor {
         writer.close();
     }
 
-    public void getAudioBlockDiff() throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("audiodiff.txt"));
-        for (int i = 1; i < soundBlock.size(); i++) {
-            byte[] prevFrame = soundBlock.get(i - 1);
-            byte[] currentFrame = soundBlock.get(i);
-            assert (prevFrame.length == currentFrame.length);
-            long diff = 0;
-            for (int j = 0; j < currentFrame.length; j++) {
-                diff += Math.pow(currentFrame[j] - prevFrame[j], 2);
-            }
-            writer.write("Audio diff between frame " + (i - 1) + " and frame " + i + ": " + diff + "\n");
-        }
-        writer.close();
-    }
-
-    private void readFrameFolder(String pathToFrames) {
-        for (int i = 0; i < (30 * 60 * 9); i++) {
-            // loads buffered images into array
-            BufferedImage OneFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            if (i % 30 == 0)
-                System.out.println("Processing video frame: " + i / 30 + "/" + 60 * 9);
-            try {
-                int frameLength = width * height * 3;
-                String imgPath = pathToFrames + "frame" + i + ".rgb";
-                File file = new File(imgPath);
-                RandomAccessFile raf = new RandomAccessFile(file, "r");
-                raf.seek(0);
-
-                long len = frameLength;
-                byte[] bytes = new byte[(int) len];
-
-                raf.read(bytes);
-
-                int ind = 0;
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        // byte a = 0;
-                        byte r = bytes[ind];
-                        byte g = bytes[ind + height * width];
-                        byte b = bytes[ind + height * width * 2];
-
-                        int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-                        // int pix = ((a << 24) + (r << 16) + (g << 8) + b);
-                        OneFrame.setRGB(x, y, pix);
-                        ind++;
-                    }
-                }
-                raf.close();
-
-                FramesArray.add(OneFrame);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private static FileInputStream getWavInput(String pathToWav) {
         FileInputStream wavInput = null;
         try {
             wavInput = new FileInputStream(pathToWav);
-            // inputStream = this.getClass().getResourceAsStream(filename);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return wavInput;
-    }
-
-    private static int getAvg(byte[] arr) {
-        assert (arr.length != 0);
-        int sum = 0;
-        for (byte i : arr) {
-            sum += i;
-        }
-        return sum / arr.length;
-    }
-
-    private static int getMax(byte[] arr) {
-        assert (arr.length != 0);
-        int max = Integer.MIN_VALUE;
-        for (byte i : arr) {
-            max = Math.max(max, i);
-        }
-        return max;
-    }
-
-    private static int getMin(byte[] arr) {
-        assert (arr.length != 0);
-        int min = Integer.MAX_VALUE;
-        for (byte i : arr) {
-            min = Math.min(i, min);
-        }
-        return min;
     }
 
     public ArrayList<LogicalShot> BreakInShots(String pathToFrames) {
